@@ -2,20 +2,20 @@ import { Subject, AgentType } from "../types";
 import React from 'react';
 
 // ĐỊA CHỈ SERVER RENDER CỦA BẠN
-const BACKEND_URL = 'https://giaibaitap-backend.onrender.com/';
+const BACKEND_URL = 'https://giaibaitap-backend.onrender.com/solve';
 
 // CACHING LAYER
 const cache = new Map<string, string>();
-const audioCache = new Map<string, string>();
 
 // Tạo key dựa trên nội dung đề bài để không bị trùng lặp
-const getCacheKey = (subject: string, agent: string, input: string, hasImage: boolean) => 
-  `${subject}|${agent}|${input.trim().substring(0, 100)}|${hasImage ? 'img' : 'no-img'}`;
+const getCacheKey = (subject: string, agent: string, input: string, hasImage: boolean) => {
+  return `${subject}|${agent}|${input.trim().substring(0, 100)}|${hasImage ? 'img' : 'no-img'}`;
+};
 
 const SYSTEM_PROMPTS: Record<AgentType, string> = {
-  [AgentType.SPEED]: `Trả về JSON: { "finalAnswer": "đáp án", "casioSteps": "bước bấm máy" }. Ngắn gọn, dùng LaTeX.`,
-  [AgentType.SOCRATIC]: `Giải chi tiết, logic, cực kỳ ngắn gọn, dùng LaTeX.`,
-  [AgentType.PERPLEXITY]: `Liệt kê 2 dạng bài tập nâng cao liên quan. Chỉ đề bài, không lời giải.`,
+  [AgentType.SPEED]: 'Trả về JSON: { "finalAnswer": "đáp án", "casioSteps": "bước bấm máy" }. Ngắn gọn, dùng LaTeX.',
+  [AgentType.SOCRATIC]: 'Giải chi tiết, logic, cực kỳ ngắn gọn, dùng LaTeX.',
+  [AgentType.PERPLEXITY]: 'Liệt kê 2 dạng bài tập nâng cao liên quan. Chỉ đề bài, không lời giải.',
 };
 
 // Hàm gửi yêu cầu sang Render
@@ -32,7 +32,8 @@ async function callRender(payload: any) {
   }
 
   const data = await response.json();
-  return data.answer; // Server Render trả về trường 'answer'
+  // Server Render trả về chuỗi text trực tiếp hoặc trong trường answer
+  return typeof data === 'string' ? data : (data.answer || JSON.stringify(data));
 }
 
 export const processTask = async (subject: Subject, agent: AgentType, input: string, image?: string) => {
@@ -45,7 +46,6 @@ export const processTask = async (subject: Subject, agent: AgentType, input: str
   try {
     const prompt = `Yêu cầu: ${SYSTEM_PROMPTS[agent]}. \nNội dung: ${input}`;
     
-    // Gửi toàn bộ dữ liệu sang Render
     const resultText = await callRender({
       subject,
       prompt,
@@ -56,18 +56,17 @@ export const processTask = async (subject: Subject, agent: AgentType, input: str
     return resultText;
   } catch (error: any) {
     console.error("Lỗi xử lý:", error);
-    throw new Error("Đầu bếp Render đang bận hoặc ảnh quá nặng. Thử lại nhé!");
+    throw new Error("Server đang khởi động (mất ~30s) hoặc ảnh quá nặng. Thử lại nhé!");
   }
 };
 
-// Các hàm bổ trợ khác cũng trỏ về Render hoặc xử lý đơn giản
 export const generateSummary = async (content: string) => {
   if (!content) return "";
   const prompt = `Tóm tắt ngắn gọn 1 câu nội dung sau: ${content}`;
   return await callRender({ subject: 'Tóm tắt', prompt });
 };
 
-// Giữ nguyên logic Audio Player vì nó chạy ở phía trình duyệt người dùng (Client)
+// --- LOGIC AUDIO PLAYER ---
 let globalAudioContext: AudioContext | null = null;
 let globalSource: AudioBufferSourceNode | null = null;
 
@@ -111,3 +110,5 @@ export const playStoredAudio = async (base64Audio: string, audioSourceRef: React
     source.start(); 
   });
 };
+
+// Dummy functions
