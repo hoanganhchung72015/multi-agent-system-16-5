@@ -2,7 +2,7 @@ import { Subject, AgentType } from "../types";
 import React from 'react';
 
 // ĐỊA CHỈ SERVER RENDER CỦA BẠN
-const BACKEND_URL = 'https://giaibaitap-backend.onrender.com/;
+const BACKEND_URL = 'https://giaibaitap-backend.onrender.com/';
 
 // CACHING LAYER
 const cache = new Map<string, string>();
