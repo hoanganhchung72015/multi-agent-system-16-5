@@ -46,6 +46,7 @@ export const processTask = async (subject: Subject, agent: AgentType, input: str
   try {
     const prompt = `Yêu cầu: ${SYSTEM_PROMPTS[agent]}. \nNội dung: ${input}`;
     
+    // Gửi toàn bộ dữ liệu sang Render
     const resultText = await callRender({
       subject,
       prompt,
@@ -56,7 +57,7 @@ export const processTask = async (subject: Subject, agent: AgentType, input: str
     return resultText;
   } catch (error: any) {
     console.error("Lỗi xử lý:", error);
-    throw new Error("Server đang khởi động (mất ~30s) hoặc ảnh quá nặng. Thử lại nhé!");
+    throw new Error("Đầu bếp Render đang bận hoặc ảnh quá nặng. Thử lại nhé!");
   }
 };
 
@@ -111,4 +112,6 @@ export const playStoredAudio = async (base64Audio: string, audioSourceRef: React
   });
 };
 
-// Dummy functions
+// Dummy functions để giữ tương thích với App.tsx cũ
+export const fetchTTSAudio = async (text: string) => { return null; };
+export const generateSimilarQuiz = async (answer: string) => { return null; };
